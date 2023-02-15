@@ -16,21 +16,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a blue toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
@@ -41,16 +26,6 @@ class MyApp extends StatelessWidget {
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
@@ -63,13 +38,16 @@ class Pokemon {
   final String image;
   final List<PokemonType>? types;
   final Stats stats;
+  final List<Resistance>? resistances;
 
-  Pokemon(
-      {required this.id,
-      required this.name,
-      required this.image,
-      required this.types,
-      required this.stats});
+  Pokemon({
+    required this.id,
+    required this.name,
+    required this.image,
+    required this.types,
+    required this.stats,
+    required this.resistances,
+  });
 
   factory Pokemon.fromJson(Map<String, dynamic> json) {
     return Pokemon(
@@ -79,6 +57,8 @@ class Pokemon {
       stats: Stats.fromJson(json['stats']),
       types: List<PokemonType>.from(
           json['apiTypes'].map((x) => PokemonType.fromJson(x))),
+      resistances: List<Resistance>.from(
+          json['apiResistances'].map((x) => Resistance.fromJson(x))),
     );
   }
 }
@@ -133,6 +113,25 @@ class PokemonType {
     return PokemonType(
       image: json['image'],
       name: json['name'],
+    );
+  }
+}
+
+class Resistance {
+  final String name;
+  final double damageMultiplier;
+  final String damageRelation;
+
+  Resistance(
+      {required this.name,
+      required this.damageMultiplier,
+      required this.damageRelation});
+
+  factory Resistance.fromJson(Map<String, dynamic> json) {
+    return Resistance(
+      name: json['name'],
+      damageMultiplier: json['damage_multiplier'].toDouble(),
+      damageRelation: json['damage_relation'],
     );
   }
 }
@@ -247,58 +246,111 @@ class PokemonDetail extends StatelessWidget {
         title: Text(pokemon.name),
       ),
       body: Center(
-        child: Column(
-          children: [
-            Image.network(pokemon.image, width: 200, height: 200),
-            Text(pokemon.name),
-            SizedBox(
-              height: 50,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 32.0),
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: [
-                    for (var type in pokemon.types!)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Image.network(type.image,
-                                width: 20, height: 20),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.only(right: 8.0),
-                            child: Text(type.name),
-                          )
-                        ],
-                      )
-                  ],
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 24),
+            child: Column(
+              children: [
+                Image.network(pokemon.image, width: 200, height: 200),
+                Text(
+                  pokemon.name,
+                  style: const TextStyle(
+                      fontSize: 35, fontWeight: FontWeight.bold),
                 ),
-              ),
+                SizedBox(
+                  height: 50,
+                  child: Padding(
+                    padding: const EdgeInsets.only(left: 32.0),
+                    child: ListView(
+                      scrollDirection: Axis.horizontal,
+                      children: [
+                        for (var type in pokemon.types!)
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Image.network(type.image,
+                                    width: 20, height: 20),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.only(right: 8.0),
+                                child: Text(type.name),
+                              )
+                            ],
+                          )
+                      ],
+                    ),
+                  ),
+                ),
+                const Text("Statistiques :",
+                    style:
+                        TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
+                Text("HP : ${pokemon.stats.hp}",
+                    style: TextStyle(
+                        fontWeight: pokemon.stats.hp == biggestStat
+                            ? FontWeight.bold
+                            : FontWeight.normal)),
+                Text("Attack : ${pokemon.stats.attack}",
+                    style: TextStyle(
+                        fontWeight: pokemon.stats.attack == biggestStat
+                            ? FontWeight.bold
+                            : FontWeight.normal)),
+                Text("Defense : ${pokemon.stats.defense}",
+                    style: TextStyle(
+                        fontWeight: pokemon.stats.defense == biggestStat
+                            ? FontWeight.bold
+                            : FontWeight.normal)),
+                Text("Special Attack : ${pokemon.stats.specialAttack}",
+                    style: TextStyle(
+                        fontWeight: pokemon.stats.specialAttack == biggestStat
+                            ? FontWeight.bold
+                            : FontWeight.normal)),
+                Text("Special Defense : ${pokemon.stats.specialDefense}",
+                    style: TextStyle(
+                        fontWeight: pokemon.stats.specialDefense == biggestStat
+                            ? FontWeight.bold
+                            : FontWeight.normal)),
+                Text("Speed : ${pokemon.stats.speed}",
+                    style: TextStyle(
+                        fontWeight: pokemon.stats.speed == biggestStat
+                            ? FontWeight.bold
+                            : FontWeight.normal)),
+                const Text("Résistances :",
+                    style:
+                        TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
+                for (var resistance in pokemon.resistances!)
+                  if (resistance.damageMultiplier < 1 &&
+                      resistance.damageMultiplier > 0)
+                    Text(
+                      "${resistance.name} : ${resistance.damageMultiplier}x",
+                      style: TextStyle(
+                          fontWeight: resistance.damageMultiplier < 0.5
+                              ? FontWeight.bold
+                              : FontWeight.normal),
+                    ),
+                const Text("Faiblesses :",
+                    style:
+                        TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
+                for (var resistance in pokemon.resistances!)
+                  if (resistance.damageMultiplier > 1)
+                    Text(
+                      "${resistance.name} : ${resistance.damageMultiplier}x",
+                      style: TextStyle(
+                          fontWeight: resistance.damageMultiplier > 2
+                              ? FontWeight.bold
+                              : FontWeight.normal),
+                    ),
+                const Text("Immunités :",
+                    style:
+                        TextStyle(fontSize: 20, fontWeight: FontWeight.w500)),
+                for (var resistance in pokemon.resistances!)
+                  if (resistance.damageMultiplier == 0)
+                    Text("${resistance.name} ")
+              ],
             ),
-            Text("HP : ${pokemon.stats.hp}",
-                style: TextStyle(
-                    fontSize: pokemon.stats.hp == biggestStat ? 20 : 15)),
-            Text("Attack : ${pokemon.stats.attack}",
-                style: TextStyle(
-                    fontSize: pokemon.stats.attack == biggestStat ? 20 : 15)),
-            Text("Defense : ${pokemon.stats.defense}",
-                style: TextStyle(
-                    fontSize: pokemon.stats.defense == biggestStat ? 20 : 15)),
-            Text("Special Attack : ${pokemon.stats.specialAttack}",
-                style: TextStyle(
-                    fontSize:
-                        pokemon.stats.specialAttack == biggestStat ? 20 : 15)),
-            Text("Special Defense : ${pokemon.stats.specialDefense}",
-                style: TextStyle(
-                    fontSize:
-                        pokemon.stats.specialDefense == biggestStat ? 20 : 15)),
-            Text("Speed : ${pokemon.stats.speed}",
-                style: TextStyle(
-                    fontSize: pokemon.stats.speed == biggestStat ? 20 : 15)),
-          ],
+          ),
         ),
       ),
     );
