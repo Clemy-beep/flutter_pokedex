@@ -7,6 +7,6 @@ You must have flutter sdk installed \
 See here installation instructions : https://docs.flutter.dev/get-started/install \
 \
 Clone the project \
-Run flutter pub install
+Run `flutter pub install`
 
 ## You're good to go !
